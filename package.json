@@ -1,0 +1,62 @@
+{
+  "name": "dsh-column-swap",
+  "version": "1.0.0",
+  "description": "DSH web plugin: swap DSH's native right column (the rightbar track) with the agent conversation column, keeping both widths, plus a top-right toggle that is the master switch for every effect. Independent of whichever plugin occupies that column.",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": {
+      "default": "./lib/index.js"
+    },
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "engines": {
+      "dsh": ">=0.1.5-rc.1"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-conversation"
+      ]
+    }
+  },
+  "files": [
+    "lib/index.js",
+    "lib/client.js",
+    "cordis.patch.yml",
+    "install.mjs",
+    "README.md",
+    "README_EN.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "cordis",
+    "plugin",
+    "sidebar",
+    "layout",
+    "ui"
+  ],
+  "license": "MIT",
+  "author": "lakersoul",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lakersoul/dsh-column-swap.git"
+  },
+  "homepage": "https://github.com/lakersoul/dsh-column-swap#readme",
+  "bugs": {
+    "url": "https://github.com/lakersoul/dsh-column-swap/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "check": "node --check lib/index.js && node --check lib/client.js && node --check install.mjs"
+  }
+}

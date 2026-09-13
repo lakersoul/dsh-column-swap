@@ -1,0 +1,11 @@
+# dependencies
+node_modules/
+
+# install.mjs / cordis.patch.yml 的备份（<file>.bak-dsh-column-swap-<时间戳>）
+*.bak-*
+*.bak
+
+# editors / OS
+.DS_Store
+Thumbs.db
+*.log
