@@ -1,6 +1,6 @@
 # dsh-column-swap
 
-> Swap DSH's **native right column** with the **agent conversation column**: `[rail | conversation | right column]` → `[rail | right column | conversation]`, each keeping its own width. A toggle in the top-right corner switches back to the native order at any time.
+> Swap DSH's **native right column** with the **agent conversation column**: `[rail | conversation | right column]` → `[rail | right column | conversation]`, each keeping its own width. It **starts in the native order** (changing nothing); the top-right toggle swaps the panes and switches back. The state is deliberately not persisted, so every start begins from the native layout.
 
 **English** · [中文](./README.md)
 
@@ -51,14 +51,14 @@ node install.mjs --dry-run && node install.mjs   # link: dependency + bundles en
 3. **`grid-row: 1` is mandatory** — with only a definite column, the sparse auto-placement cursor bumps the row whenever the column index goes *backwards*. Document order is rail(col1) → conversation(col3) → right(col2), so the right column lands in implicit row 2 — and `grid-template-rows: 100%` only defines row 1, whose implicit height is auto ⇒ height 0, pushed below the viewport (the columns "swap correctly" yet nothing is visible).
 4. **The divider** — the native line is the panel's *own* `border-left`; after the swap it overlaps the rail's border while the new boundary has none. Fix: drop the panel's `border-left` while swapped and draw an equal line on the right column's right edge.
 5. **Drag direction** — the native handle is `setRightbar(base - dx)`, i.e. right-docked semantics; a left-docked column needs the opposite sign. With no width API available, the fix is at the event layer: intercept the handle's pointer events on the frame in the capture phase and re-dispatch them with `clientX` **mirrored about 0** — `DragHandle` only ever uses `clientX` deltas, so mirroring equals `dx → -dx`. When the toggle is off, events pass through untouched.
-6. **Master toggle** — every layout rule hangs off `[data-dsh-swap-on]`; the toggle only adds/removes that one attribute. The button registers into `conversation.session.header.utilities` (a *list* slot, additive and right-aligned), which — because the conversation column is the rightmost one while swapped — is exactly the window's top-right corner, next to DSH's own right-sidebar expand button.
+6. **Master toggle** — every layout rule hangs off `[data-dsh-swap-on]`; the toggle only adds/removes that one attribute. The button registers into `conversation.session.header.utilities` (a *list* slot, additive and right-aligned), which — because the conversation column is the rightmost one while swapped — is exactly the window's top-right corner, next to DSH's own right-sidebar expand button. **The default is off**: the plugin starts in DSH's native order, the button is the only way in, and the state is intentionally not persisted.
 
 ## Verification
 
-1. The console logs `[dsh-column-swap] column swap active — rail/sidebar = <px> / <px>`.
+1. The console logs `[dsh-column-swap] ready — rail/sidebar = <px> / <px> (native order — click the header button to swap)`; after a click the suffix becomes `(swapped — click the header button to restore)`.
 2. The three columns sit at `row 1` with rects `rail[0..S]`, `right[S..S+R]`, `conversation[S+R..]`.
 3. Dragging the divider tracks the pointer (right = wider), with the panel width following every frame.
-4. Clicking the top-right button restores the native order — and the divider then drags with the native, correct direction.
+4. Clicking the top-right button swaps the panes (the divider then drags with the natural direction); clicking again restores the native order and the native drag semantics.
 
 ## Known trade-offs
 

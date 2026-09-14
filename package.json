@@ -1,6 +1,6 @@
 {
   "name": "dsh-column-swap",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "DSH web plugin: swap DSH's native right column (the rightbar track) with the agent conversation column, keeping both widths, plus a top-right toggle that is the master switch for every effect. Independent of whichever plugin occupies that column.",
   "type": "module",
   "main": "lib/index.js",
