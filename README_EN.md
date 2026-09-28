@@ -20,7 +20,7 @@ It is independent of *what* occupies that column: with [dsh-better-sidebar](http
 
 | | |
 |---|---|
-| DSH | `0.1.5-rc.1+` (the native right column arrived in `0.1.5-alpha.1`, its usable API surface stabilised in `rc.1`; verified on `0.1.5-rc.1`) |
+| DSH | `0.1.5-rc.1+` (the native right column arrived in `0.1.5-alpha.1`; verified on `0.1.5-rc.1` and `0.1.7-rc.2` — the two generations spell the frame template differently, and the plugin splits track expressions at top-level whitespace so both work) |
 | Node.js | `>= 20` |
 | Build | **None**: `lib/index.js` (host half) and `lib/client.js` (browser half) are the hand-written plain-JS sources — no TypeScript, no bundler |
 
@@ -47,7 +47,7 @@ node install.mjs --dry-run && node install.mjs   # link: dependency + bundles en
 ## Design notes (each point is a real trap this plugin had to solve)
 
 1. **Anchors** — right column = `[data-rightbar-col]`; frame = its nearest `display:grid` ancestor; the three columns = each anchor walked up to the frame's direct child (through any number of slot wrappers). The conversation column has four fallbacks; a missing rail never blocks.
-2. **Track rewrite** — read the frame's *inline* `grid-template-columns` (React's source of truth; the computed value would read our own output and self-oscillate) and override it with `railPx rightPx minmax(0,1fr)`.
+2. **Track rewrite** — read the frame's *inline* `grid-template-columns` (React's source of truth; the computed value would read our own output and self-oscillate), split the three track expressions at **top-level whitespace** (the space inside `minmax(400px, 1fr)` is not a separator), and swap the last two while keeping every expression verbatim: `railTrack rightTrack conversationTrack`. Both host generations are supported — `0.1.5` writes `Spx minmax(0,1fr) Rpx`, `0.1.7` writes `Spx minmax(400px,1fr) minmax(0px,Rmax)`. Only three-track shapes are handled; anything else means "do nothing" rather than "write something broken". (The earlier whitespace-only parser read the third track as `Rmax)` and produced `… 900px) …` — an invalid declaration the browser drops at computed-value time, which drops the three columns into content-sized implicit tracks: exactly the "right sidebar no longer flush with the rail" symptom.) The drag-handle boundary is measured from the right column's right edge, because a `minmax` cap need not equal the used track width.
 3. **`grid-row: 1` is mandatory** — with only a definite column, the sparse auto-placement cursor bumps the row whenever the column index goes *backwards*. Document order is rail(col1) → conversation(col3) → right(col2), so the right column lands in implicit row 2 — and `grid-template-rows: 100%` only defines row 1, whose implicit height is auto ⇒ height 0, pushed below the viewport (the columns "swap correctly" yet nothing is visible).
 4. **The divider** — the native line is the panel's *own* `border-left`; after the swap it overlaps the rail's border while the new boundary has none. Fix: drop the panel's `border-left` while swapped and draw an equal line on the right column's right edge.
 5. **Drag direction** — the native handle is `setRightbar(base - dx)`, i.e. right-docked semantics; a left-docked column needs the opposite sign. With no width API available, the fix is at the event layer: intercept the handle's pointer events on the frame in the capture phase and re-dispatch them with `clientX` **mirrored about 0** — `DragHandle` only ever uses `clientX` deltas, so mirroring equals `dx → -dx`. When the toggle is off, events pass through untouched.
@@ -55,7 +55,7 @@ node install.mjs --dry-run && node install.mjs   # link: dependency + bundles en
 
 ## Verification
 
-1. The console logs `[dsh-column-swap] ready — rail/sidebar = <px> / <px> (native order — click the header button to swap)`; after a click the suffix becomes `(swapped — click the header button to restore)`.
+1. The console logs `[dsh-column-swap] ready — tracks = <rail track> / <right track> (native order — click the header button to swap)`; **every button press logs a geometry self-check**: `[dsh-column-swap] swapped | rail <l>..<r> | sidebar <l>..<r> | conversation <l>..<r> | gap 0px | template <computed>` — `gap 0px` means the right column sits flush against the rail, and `template` must not be `none` (that would mean the track declaration was dropped).
 2. The three columns sit at `row 1` with rects `rail[0..S]`, `right[S..S+R]`, `conversation[S+R..]`.
 3. Dragging the divider tracks the pointer (right = wider), with the panel width following every frame.
 4. Clicking the top-right button swaps the panes (the divider then drags with the natural direction); clicking again restores the native order and the native drag semantics.
