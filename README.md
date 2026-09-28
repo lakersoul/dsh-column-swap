@@ -20,7 +20,7 @@ DSH 的 `AppFrame` 是一个三轨 grid：
 
 | | |
 |---|---|
-| DSH | `0.1.5-rc.1+`（原生右侧栏自 `0.1.5-alpha.1` 引入，可用的 API 面在 `rc.1` 稳定；本插件实测于 `0.1.5-rc.1`） |
+| DSH | `0.1.5-rc.1+`（原生右侧栏自 `0.1.5-alpha.1` 引入；本插件实测于 `0.1.5-rc.1` 与 `0.1.7-rc.2` —— 两代的帧模板写法不同，插件按「顶层空白切分轨道表达式」同时兼容） |
 | Node.js | `>= 20` |
 | 构建 | **无需构建**：`lib/index.js`（宿主半边）与 `lib/client.js`（浏览器半边）本身就是手写纯 JS 源码，没有 TS / 打包步骤 |
 
@@ -81,7 +81,7 @@ node install.mjs --remove      # 两条通道都清（依赖、bundles、符号�
 
 1. **锚点定位**：右列 = `[data-rightbar-col]`；帧 = 它向上最近的 `display:grid` 祖先；三列 = 各自锚点**向上走到帧的直接子元素**（跨任意层 slot 包裹）。对话列有四级兜底（`main` → `main.conversation` → `conversation` 的 slot 宿主 → 「帧的在流子元素里排除左右两列后仅剩的那一个」）；左栏找不到也不阻塞（此时只显式放置右列与对话栏，左栏自动占第 1 轨）。
 
-2. **轨道重写**：读帧的**内联** `grid-template-columns`（React 的真相源；读计算值会读到自己写出去的结果而自激），用注入的 `!important` 规则覆盖成 `左栏px 右列px minmax(0,1fr)`。纯字符串演算，热路径无强制重排。
+2. **轨道重写**：读帧的**内联** `grid-template-columns`（React 的真相源；读计算值会读到自己写出去的结果而自激），把三条轨道表达式**按顶层空白切分**（`minmax(400px, 1fr)` 里的空格不是分隔符）后交换后两段，得到 `左栏轨 右列轨 对话轨` —— 每条表达式原样保留，只在模板变化时量一次手柄边界。两种宿主写法都支持：`0.1.5` 是 `Spx minmax(0,1fr) Rpx`，`0.1.7` 起是 `Spx minmax(400px,1fr) minmax(0px,Rmax)`（三轨都可能是表达式）。只认三轨；形状不认识就整体不动作。（旧实现按空白切三段取首末，遇到 `0.1.7` 会把第三段切成 `Rmax)`、拼出 `… 900px) …` 这种非法值，整条声明在计算值阶段失效 ⇒ 三列落进自动定宽的隐式列 ⇒ 现象正是「右列换到中间后贴不住左栏」。）
 
 3. **`grid-row: 1`（必需）**：只给「确定列、自动行」的 grid item 时，稀疏自动放置的游标会在**列号回退**时把行 +1 —— 布局里文档顺序是 左栏(col1) → 对话栏(col3) → 右列(col2)，于是右列被判给**隐式第 2 行**；而 `grid-template-rows: 100%` 只定义第 1 行，隐式行高为 auto ⇒ 高度 0，整列被挤到视口下方（现象：列「换对了」却什么都看不见）。三列都写死 `grid-row: 1` 即可。
 
@@ -95,7 +95,7 @@ node install.mjs --remove      # 两条通道都清（依赖、bundles、符号�
 
 ## 验证
 
-1. 浏览器控制台出现一行：`[dsh-column-swap] ready — rail/sidebar = <px> / <px> (native order — click the header button to swap)`；点过按钮后后缀会变成 `(swapped — click the header button to restore)`。
+1. 浏览器控制台出现一行 `[dsh-column-swap] ready — tracks = <左栏轨> / <右列轨> (native order — click the header button to swap)`；**点按钮后会再打一行几何自检**：`[dsh-column-swap] swapped | rail <l>..<r> | sidebar <l>..<r> | conversation <l>..<r> | gap 0px | template <计算值>` —— **`gap 0px` 即右列与左栏贴合**，`template` 不应为 `none`（为 `none` 说明轨道声明失效）。
 2. 三列 rect 应为 `左栏[0..S]`、右列`[S..S+R]`、对话栏`[S+R..]`，且三者 `grid-row` 均为 `1 / auto`。
 3. 拖「右列 ↔ 对话栏」之间的分割线：向右拖右列变宽、向左拖变窄，跟指针走，且列内宽度逐帧跟随。
 4. 点右上角按钮：列序变为交换态（`[左栏 | 右列 | 对话栏]`），分割线拖动方向随之成为自然方向；再点切回原生列序（拖动方向回到原生语义）。
@@ -105,7 +105,7 @@ node install.mjs --remove      # 两条通道都清（依赖、bundles、符号�
 | 用途 | 依赖 | 归属包 |
 |---|---|---|
 | 右列 | `[data-rightbar-col]` | `dsh-client-ui-layout`（AppFrame `RightbarColumn`） |
-| 帧 / 轨道 | 右列向上最近的 `display:grid` 祖先；帧**内联** `style.gridTemplateColumns`（须为三段、首末为 `px`） | `dsh-client-ui-layout` |
+| 帧 / 轨道 | 右列向上最近的 `display:grid` 祖先；帧**内联** `style.gridTemplateColumns`（须为**三轨**，每轨可为任意表达式）；「无轨道」状态改读宿主属性 `data-rightbar-collapsed` | `dsh-client-ui-layout` |
 | 右手柄 | `[data-side="rightbar"]`（内联 `left`） | `dsh-client-ui-layout`（`DragHandle`） |
 | 对话列 | `[data-slot="main"]` → `[data-slot="main.conversation"]` → `[data-slot="conversation"]` → 在流子元素排除法 | `dsh-client-ui-conversation` |
 | 左栏 | `[data-slot="sidebar"]` | `dsh-client-ui-sidebar` |
