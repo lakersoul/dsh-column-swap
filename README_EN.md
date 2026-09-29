@@ -20,7 +20,7 @@ It is independent of *what* occupies that column: with [dsh-better-sidebar](http
 
 | | |
 |---|---|
-| DSH | `0.1.5-rc.1+` (the native right column arrived in `0.1.5-alpha.1`; verified on `0.1.5-rc.1` and `0.1.7-rc.2` — the two generations spell the frame template differently, and the plugin splits track expressions at top-level whitespace so both work) |
+| DSH | `0.1.5-rc.1+` (the native right column arrived in `0.1.5-alpha.1`; verified on `0.1.5-rc.1`, `0.1.7-rc.2` and `0.2.0-rc.2` — from `0.1.7` the frame template became three track expressions, and the plugin splits track expressions at top-level whitespace so both spellings work) |
 | Node.js | `>= 20` |
 | Build | **None**: `lib/index.js` (host half) and `lib/client.js` (browser half) are the hand-written plain-JS sources — no TypeScript, no bundler |
 
@@ -66,6 +66,7 @@ node install.mjs --dry-run && node install.mjs   # link: dependency + bundles en
 - **`overflow: hidden` on the right column**: the default panel's own `border-left` used to be the divider; while swapped the column clips the panel so open/close animates as a clean wipe instead of sweeping across the rail. Cost: a tab dragged outside the column gets clipped (native menus/overlays are portaled to `document.body` and unaffected).
 - **Narrow windows / floating mode** (right track = 0): the panel is pinned back to the viewport's right edge, preserving native overlay behaviour.
 - The pointer mirror only applies while swapped.
+- **Untested on macOS** (`[data-platform=darwin]`): that generation gives the conversation column a `border-left` and drops the rail's `border-right`, so while swapped the divider this plugin draws may stack with it as two 0.5px lines at the boundary — cosmetic only.
 
 ## License
 
