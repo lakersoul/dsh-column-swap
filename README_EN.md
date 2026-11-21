@@ -55,7 +55,7 @@ node install.mjs --dry-run && node install.mjs   # link: dependency + bundles en
 
 ## Verification
 
-1. The console logs `[dsh-column-swap] ready — tracks = <rail track> / <right track> (native order — click the header button to swap)`; **every button press logs a geometry self-check**: `[dsh-column-swap] swapped | rail <l>..<r> | sidebar <l>..<r> | conversation <l>..<r> | gap 0px | template <computed>` — `gap 0px` means the right column sits flush against the rail, and `template` must not be `none` (that would mean the track declaration was dropped).
+1. The console logs `[dsh-column-swap] ready — tracks = <rail track> / <right track> (native order — click the header button to swap)`; **every button press logs one geometry line**: `[dsh-column-swap] swapped | rail <l>..<r> | sidebar <l>..<r> | conversation <l>..<r> | gap 0px | template <computed>` — `gap 0px` means the right column sits flush against the rail, and `template` must not be `none`. **The boundary audit stays silent when healthy**: each boundary is expected to carry exactly one visible border; when the counts differ (or the columns do not meet) it expands into the element stacks and border details (with `lines L=… R=… (expect 1 / 1)`), which is what to paste when reporting a problem.
 2. The three columns sit at `row 1` with rects `rail[0..S]`, `right[S..S+R]`, `conversation[S+R..]`.
 3. Dragging the divider tracks the pointer (right = wider), with the panel width following every frame.
 4. Clicking the top-right button swaps the panes (the divider then drags with the natural direction); clicking again restores the native order and the native drag semantics.

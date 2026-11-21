@@ -95,7 +95,7 @@ node install.mjs --remove      # 两条通道都清（依赖、bundles、符号�
 
 ## 验证
 
-1. 浏览器控制台出现一行 `[dsh-column-swap] ready — tracks = <左栏轨> / <右列轨> (native order — click the header button to swap)`；**点按钮后会再打一行几何自检**：`[dsh-column-swap] swapped | rail <l>..<r> | sidebar <l>..<r> | conversation <l>..<r> | gap 0px | template <计算值>` —— **`gap 0px` 即右列与左栏贴合**，`template` 不应为 `none`（为 `none` 说明轨道声明失效）。
+1. 浏览器控制台出现一行 `[dsh-column-swap] ready — tracks = <左栏轨> / <右列轨> (native order — click the header button to swap)`；**每次点按钮打一行几何自检**：`[dsh-column-swap] swapped | rail <l>..<r> | sidebar <l>..<r> | conversation <l>..<r> | gap 0px | template <计算值>` —— **`gap 0px` 即右列与左栏贴合**，`template` 不应为 `none`（为 `none` 说明轨道声明失效）。**体检默认静默**：两条边界本该各只有 1 条可见边框；数量不符（或没贴齐）时才会自动展开元素栈与边框明细（含 `lines L=… R=… (expect 1 / 1)`），把那段贴出来即可定位。
 2. 三列 rect 应为 `左栏[0..S]`、右列`[S..S+R]`、对话栏`[S+R..]`，且三者 `grid-row` 均为 `1 / auto`。
 3. 拖「右列 ↔ 对话栏」之间的分割线：向右拖右列变宽、向左拖变窄，跟指针走，且列内宽度逐帧跟随。
 4. 点右上角按钮：列序变为交换态（`[左栏 | 右列 | 对话栏]`），分割线拖动方向随之成为自然方向；再点切回原生列序（拖动方向回到原生语义）。
