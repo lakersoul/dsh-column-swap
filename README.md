@@ -20,7 +20,7 @@ DSH 的 `AppFrame` 是一个三轨 grid：
 
 | | |
 |---|---|
-| DSH | `0.1.5-rc.1+`（原生右侧栏自 `0.1.5-alpha.1` 引入；本插件实测于 `0.1.5-rc.1`、`0.1.7-rc.2`、`0.2.0-rc.2` —— 帧模板自 `0.1.7` 起改为「三轨表达式」，插件按「顶层空白切分轨道表达式」同时兼容两代写法） |
+| DSH | `0.1.5-rc.1+`（原生右侧栏自 `0.1.5-alpha.1` 引入；本插件实测于 `0.1.5-rc.1`、`0.1.7-rc.2`、`0.2.0-rc.2`、`0.2.2-rc.5` —— 帧模板自 `0.1.7` 起改为「三轨表达式」，插件按「顶层空白切分轨道表达式」同时兼容两代写法） |
 | Node.js | `>= 20` |
 | 构建 | **无需构建**：`lib/index.js`（宿主半边）与 `lib/client.js`（浏览器半边）本身就是手写纯 JS 源码，没有 TS / 打包步骤 |
 
@@ -85,7 +85,7 @@ node install.mjs --remove      # 两条通道都清（依赖、bundles、符号�
 
 3. **`grid-row: 1`（必需）**：只给「确定列、自动行」的 grid item 时，稀疏自动放置的游标会在**列号回退**时把行 +1 —— 布局里文档顺序是 左栏(col1) → 对话栏(col3) → 右列(col2)，于是右列被判给**隐式第 2 行**；而 `grid-template-rows: 100%` 只定义第 1 行，隐式行高为 auto ⇒ 高度 0，整列被挤到视口下方（现象：列「换对了」却什么都看不见）。三列都写死 `grid-row: 1` 即可。
 
-4. **分割线**：原生那条「对话栏 | 右列」分界线其实是**面板自己的** `border-left`（`.panel{border-left:.5px solid var(--dsw-alias-border-l4)}`）—— 面板原本 `right:0` 锚在右列右缘，其左缘正好落在边界上。交换后右列跑到中间，面板左缘变成与左栏 `border-right` 重叠，而新边界上什么都没有 ⇒ 表现为「少了分割线」。修法：交换态去掉面板的 `border-left`，改在**右列右缘**画等宽同色线（列宽为 0 时不画）。
+4. **分割线**：原生那条「对话栏 | 右列」分界线在 `0.1.5`–`0.1.7` 是**面板自己的** `border-left`（面板 `right:0` 锚在右列右缘，其左缘正好落在边界上）。交换后右列跑到中间，面板左缘变成与左栏 `border-right` 重叠，而新边界上什么都没有 ⇒ 表现为「少了分割线」。修法：交换态去掉面板的 `border-left`，改在**右列右缘**画等宽同色线（列宽为 0 时不画）。**`0.2.2-rc.5` 起宿主不再画这条线**（面板已无 `border-left`），所以插件改为「宿主画线才补」：一次性探测面板原生的 `border-left-width`，为 0 就完全不画，保证交换态与原生外观一致。
 
 5. **拖动方向**：原生手柄的 `onDrag` 是 `setRightbar(base - dx)` —— 这是**右侧停靠**语义（手柄在面板左缘，向左拖 = 面板变宽）。交换后右列变成「左缘钉在左栏」的左停靠，同一个公式就反了。因为没有宽度 API，只能在事件层纠正：在帧上以捕获阶段拦住右手柄的指针事件，把 `clientX` **关于 0 镜像**后重新派发 —— `DragHandle` 只用 `clientX` 的差值（`origin` / `latest`），绝对量从不参与，因此镜像等价于 `dx → -dx`。**开关关闭时直接放行**，让原生布局保住它本来正确的方向。
 
@@ -105,7 +105,7 @@ node install.mjs --remove      # 两条通道都清（依赖、bundles、符号�
 | 用途 | 依赖 | 归属包 |
 |---|---|---|
 | 右列 | `[data-rightbar-col]` | `dsh-client-ui-layout`（AppFrame `RightbarColumn`） |
-| 帧 / 轨道 | 右列向上最近的 `display:grid` 祖先；帧**内联** `style.gridTemplateColumns`（须为**三轨**，每轨可为任意表达式）；「无轨道」状态改读宿主属性 `data-rightbar-collapsed` | `dsh-client-ui-layout` |
+| 帧 / 轨道 | 右列向上最近的 `display:grid` 祖先；帧**内联** `style.gridTemplateColumns`（须为**三轨**，每轨可为任意表达式）；「无轨道」状态读宿主属性 `data-rightbar-collapsed`；**左栏不由本插件放置**（`0.2.2` 起宿主用 `grid-area` 写死三列，抽屉模式 `[data-sidebar-drawer]` 下左栏是绝对定位浮层，改放置会换掉它的包含块） | `dsh-client-ui-layout` |
 | 右手柄 | `[data-side="rightbar"]`（内联 `left`） | `dsh-client-ui-layout`（`DragHandle`） |
 | 对话列 | `[data-slot="main"]` → `[data-slot="main.conversation"]` → `[data-slot="conversation"]` → 在流子元素排除法 | `dsh-client-ui-conversation` |
 | 左栏 | `[data-slot="sidebar"]` | `dsh-client-ui-sidebar` |
